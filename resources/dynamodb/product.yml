@@ -1,0 +1,17 @@
+productTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: hendi-${self:service}-products
+    AttributeDefinitions:
+      - AttributeName: _id
+        AttributeType: S
+      - AttributeName: sku
+        AttributeType: S
+    KeySchema:
+      - AttributeName: _id
+        KeyType: HASH
+      - AttributeName: sku
+        KeyType: RANGE
+    ProvisionedThroughput:
+      ReadCapacityUnits: 1
+      WriteCapacityUnits: 1

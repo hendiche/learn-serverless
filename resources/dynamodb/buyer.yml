@@ -1,0 +1,13 @@
+buyerTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: hendi-${self:service}-buyers
+    AttributeDefinitions:
+      - AttributeName: _id
+        AttributeType: S
+    KeySchema:
+      - AttributeName: _id
+        KeyType: HASH
+    ProvisionedThroughput:
+      ReadCapacityUnits: 1
+      WriteCapacityUnits: 1
