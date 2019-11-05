@@ -12,7 +12,6 @@
 # Happy Coding!
 
 service: test-serverless-restapi
-# app and org for use with dashboard.serverless.com
 app: test-serverless-restapi
 org: hendi
 
@@ -23,6 +22,13 @@ org: hendi
 provider:
   name: aws
   runtime: nodejs10.x
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource:
+        - arn:aws:dynamodb:ap-northeast-1:172830017779:table/hendi-test-serverless-restapi-products
+        - arn:aws:dynamodb:ap-northeast-1:172830017779:table/hendi-test-serverless-restapi-buyers
 
 # you can overwrite defaults here
   stage: dev
@@ -61,53 +67,38 @@ provider:
 functions:
   hello:
     handler: handler.hello
-  product:
-    handler: src/productHandler.create
+  product_create:
+    handler: handler.create
     events:
       - http:
           path: product/create
+          method: POST
+    environment:
+      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
+  product_read:
+    handler: handler.read
+    events:
+      - http:
+          path: product/get
           method: GET
     environment:
       DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - websocket: $connect
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
-#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
-#      - alb:
-#          listenerArn: arn:aws:elasticloadbalancing:us-east-1:XXXXXX:listener/app/my-load-balancer/50dc6c495c0c9188/
-#          priority: 1
-#          conditions:
-#            host: example.com
-#            path: /hello
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
+  product_all:
+    handler: handler.readAll
+    events:
+      - http:
+          path: product/all
+          method: GET
+    environment:
+      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
+  product_update:
+    handler: handler.update
+    events:
+      - http:
+          path: product/update/{_id}/{sku}
+          method: PUT
+    environment:
+      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
 
 # you can add CloudFormation resource templates here
 resources:
