@@ -29,6 +29,9 @@ provider:
       Resource:
         - arn:aws:dynamodb:ap-northeast-1:172830017779:table/hendi-test-serverless-restapi-products
         - arn:aws:dynamodb:ap-northeast-1:172830017779:table/hendi-test-serverless-restapi-buyers
+  environment:
+    DB_PRODUCT: ${self:resources.Resources.productTable.Properties.TableName}
+    DB_BUYER: ${self:resources.Resources.buyerTable.Properties.TableName}
 
 # you can overwrite defaults here
   stage: dev
@@ -71,42 +74,44 @@ functions:
     handler: handler.create
     events:
       - http:
-          path: product/create
+          path: product
           method: POST
-    environment:
-      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
   product_read:
     handler: handler.read
     events:
       - http:
-          path: product/get
+          path: product/{_id}/{sku}
           method: GET
-    environment:
-      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
   product_all:
     handler: handler.readAll
     events:
       - http:
-          path: product/all
+          path: product/list
           method: GET
-    environment:
-      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
   product_update:
     handler: handler.update
     events:
       - http:
-          path: product/update/{_id}/{sku}
+          path: product/{_id}/{sku}
           method: PUT
-    environment:
-      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
   product_delete:
     handler: handler.delete
     events:
       - http:
-          path: product/delete/{_id}/{sku}
+          path: product/{_id}/{sku}
           method: DELETE
-    environment:
-      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
+  newBuyer: # or purchase
+    handler: handler.newBuyer
+    events:
+      - http:
+          path: buyer
+          method: POST
+  invoices:
+    handler: handler.invoices
+    events:
+      - http: 
+          path: invoices
+          method: GET
 
 # you can add CloudFormation resource templates here
 resources:

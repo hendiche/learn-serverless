@@ -38,7 +38,7 @@ module.exports.create = async event => {
     const timestamp = new Date().getTime();
     const { sku, name, qty } = isValidate;
     const params = {
-        TableName: process.env.DB_TABLE_NAME,
+        TableName: process.env.DB_PRODUCT,
         Item: {
             _id: uuid.v1(),
             sku: sku,
@@ -72,20 +72,20 @@ const getDynamo = params => {
         });
     });
 }
-module.exports.read = async () => {
+module.exports.read = async event => {
     const params = {
-        TableName: process.env.DB_TABLE_NAME,
+        TableName: process.env.DB_PRODUCT,
         Key: {
-            "_id": '08083de0-ff82-11e9-8dcd-65fa6d58a1c4',
-            "sku": 'asd1ds',
+            _id: event.pathParameters._id,
+            sku: event.pathParameters.sku,
         }
     }
 
     try {
-        const item = await getDynamo(params);
+        const data = await getDynamo(params);
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'ok', item: item }),
+            body: JSON.stringify({ message: 'ok', item: data.item }),
         }
     } catch (err) {
         return {
@@ -126,7 +126,7 @@ const getAllDynamo = params => {
 // or called as list not readAll
 module.exports.readAll = async event => {
     const params = {
-        TableName: process.env.DB_TABLE_NAME,
+        TableName: process.env.DB_PRODUCT,
     }
     const checkQuery = await setScanFilter(event);
 
@@ -138,7 +138,7 @@ module.exports.readAll = async event => {
         const items = await getAllDynamo(params);
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'ok', items: items }),
+            body: JSON.stringify({ message: 'ok', data: items }),
         }
     } catch (err) {
         return {
@@ -163,10 +163,9 @@ const checkBeforeUpdate = event => {
 const updateDynamo = params => {
     return new Promise((resolve, reject) => {
         dynamoDb.update(params, (err, data) => {
-            console.log('err:', err);
-            console.log('data:', data);
             if (err) reject(err);
-            else resolve(data);
+            
+            resolve(data);
         })
     });
 }
@@ -183,7 +182,7 @@ module.exports.update = async event => {
     const timestamp = new Date().getTime();
     const { name, qty } = isValidate;
     const params = {
-        TableName: process.env.DB_TABLE_NAME,
+        TableName: process.env.DB_PRODUCT,
         Key: {
             _id: event.pathParameters._id,
             sku: event.pathParameters.sku,
@@ -226,7 +225,7 @@ const deleteDynamo = params => {
 }
 module.exports.delete = async event => {
     const params = {
-        TableName: process.env.DB_TABLE_NAME,
+        TableName: process.env.DB_PRODUCT,
         Key: {
             _id: event.pathParameters._id,
             sku: event.pathParameters.sku,
