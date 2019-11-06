@@ -5,30 +5,28 @@ const uuid = require('uuid');
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-function checkBeforePut(body) {
+// return boolean of false if goes wrong, else object
+function checkBeforePut(event) {
     return new Promise((resolve) => {
-        if (!body.sku || !body.name) {
-            resolve(false);
-        }
+        if (!event.body) resolve(false);
 
-        resolve(true);
+        const body = JSON.parse(event.body);
+
+        if (!body.sku || !body.name) resolve(false);
+
+        resolve(body);
     });
 }
 function putDynamo(params) {
     return new Promise((resolve, reject) => {
         dynamoDb.put(params, (err) => {
-            if (err) {
-                reject(err);
-            }
-            else {
-                resolve();
-            }
+            if (err) reject(err);
+            else resolve();
         });
     });
 }
 module.exports.create = async event => {
-    const data = JSON.parse(event.body || {});
-    const isValidate = await checkBeforePut(data);
+    const isValidate = await checkBeforePut(event);
 
     if (!isValidate) {
         return {
@@ -38,13 +36,14 @@ module.exports.create = async event => {
     }
 
     const timestamp = new Date().getTime();
+    const { sku, name, qty } = isValidate;
     const params = {
         TableName: process.env.DB_TABLE_NAME,
         Item: {
             _id: uuid.v1(),
-            sku: data.sku,
-            name: data.name,
-            qty: 1,
+            sku: sku,
+            name: name,
+            qty: qty ? qty : 1,
             createdAt: timestamp,
             updatedAt: timestamp
         },
@@ -124,6 +123,7 @@ const getAllDynamo = params => {
         });
     });
 }
+// or called as list not readAll
 module.exports.readAll = async event => {
     const params = {
         TableName: process.env.DB_TABLE_NAME,
@@ -148,15 +148,16 @@ module.exports.readAll = async event => {
     }
 }
 
-const checkBeforeUpdate = (event, body) => {
+// return boolean of false if goes wrong, else object
+const checkBeforeUpdate = event => {
     return new Promise(resolve => {
-        const { _id, sku } = event.pathParameters;
-        
-        if (!_id || !sku) resolve(false);
+        if (!event.body) resolve(false)
+
+        const body = JSON.parse(event.body);
 
         if (!body.name || !body.qty) resolve(false);
 
-        resolve(true);
+        resolve(body);
     });
 }
 const updateDynamo = params => {
@@ -170,8 +171,7 @@ const updateDynamo = params => {
     });
 }
 module.exports.update = async event => {
-    const data = JSON.parse(event.body || {});
-    const isValidate = await checkBeforeUpdate(event, data);
+    const isValidate = await checkBeforeUpdate(event);
     
     if (!isValidate) {
         return {
@@ -181,7 +181,7 @@ module.exports.update = async event => {
     }
 
     const timestamp = new Date().getTime();
-    const { name, qty } = data;
+    const { name, qty } = isValidate;
     const params = {
         TableName: process.env.DB_TABLE_NAME,
         Key: {
@@ -210,6 +210,39 @@ module.exports.update = async event => {
         return {
             statusCode: 400,
             body: err.message
+        }
+    }
+}
+
+
+const deleteDynamo = params => {
+    return new Promise((resolve, reject) => {
+        dynamoDb.delete(params, (err) => {
+            if (err) reject(err);
+            
+            resolve();
+        })
+    })
+}
+module.exports.delete = async event => {
+    const params = {
+        TableName: process.env.DB_TABLE_NAME,
+        Key: {
+            _id: event.pathParameters._id,
+            sku: event.pathParameters.sku,
+        },
+    };
+
+    try {
+        await deleteDynamo(params);
+        return {
+            statusCode: 200,
+            body: 'ok'
+        }
+    } catch(err) {
+        return {
+            statusCode: 500,
+            body: err.message,
         }
     }
 }

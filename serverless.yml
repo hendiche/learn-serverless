@@ -99,6 +99,14 @@ functions:
           method: PUT
     environment:
       DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
+  product_delete:
+    handler: handler.delete
+    events:
+      - http:
+          path: product/delete/{_id}/{sku}
+          method: DELETE
+    environment:
+      DB_TABLE_NAME: ${self:resources.Resources.productTable.Properties.TableName}
 
 # you can add CloudFormation resource templates here
 resources:

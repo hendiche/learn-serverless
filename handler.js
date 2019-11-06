@@ -19,5 +19,6 @@ module.exports.hello = async event => {
 };
 module.exports.create = product.create;
 module.exports.read = product.read;
-module.exports.readAll = product.readAll;
+module.exports.readAll = product.readAll; //or called as list not readAll
 module.exports.update = product.update;
+module.exports.delete = product.delete;
