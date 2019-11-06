@@ -23,6 +23,8 @@ module.exports.hello = async event => {
 module.exports.create = product.create;
 module.exports.read = product.read;
 module.exports.readAll = product.readAll; //or called as list not readAll
+// dynamoDB update ref : https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.NodeJs.03.html#GettingStarted.NodeJs.03.05
+// there's few quick shortcut ways to handle update with dynamoDB
 module.exports.update = product.update;
 module.exports.delete = product.delete;
 
